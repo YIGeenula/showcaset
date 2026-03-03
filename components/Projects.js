@@ -9,20 +9,33 @@ export default function Projects() {
 
     useGSAP(() => {
         let sections = gsap.utils.toArray(".project-panel");
-        if (sections.length > 0) {
-            gsap.to(sections, {
-                xPercent: -100 * (sections.length - 1),
-                ease: "none",
-                scrollTrigger: {
-                    trigger: containerRef.current,
-                    pin: true,
-                    scrub: 1,
-                    snap: 1 / (sections.length - 1),
-                    start: "top top",
-                    end: "+=" + (sections.length * 1000)
-                }
-            });
-        }
+
+        let mm = gsap.matchMedia();
+
+        // Target all screens with matched media settings for responsiveness
+        mm.add("(min-width: 320px)", () => {
+            if (sections.length > 0) {
+                gsap.to(sections, {
+                    xPercent: -100 * (sections.length - 1),
+                    ease: "none",
+                    scrollTrigger: {
+                        trigger: containerRef.current,
+                        pin: true,
+                        scrub: 1, // 1-second delay for smooth following
+                        anticipatePin: 1, // helps avoid jarring jumps on mobile
+                        snap: {
+                            snapTo: 1 / (sections.length - 1),
+                            duration: { min: 0.2, max: 0.6 },
+                            delay: 0.1,
+                            ease: "power1.inOut"
+                        },
+                        start: "top top",
+                        // Require scrolling down an amount equal to height of all panels combined for smooth 1:1 feel
+                        end: () => "+=" + (document.querySelector(".projects-wrapper").offsetWidth || window.innerHeight * sections.length)
+                    }
+                });
+            }
+        });
     }, { scope: containerRef });
 
 
