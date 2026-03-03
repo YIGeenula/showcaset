@@ -2,50 +2,30 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { gsap } from "gsap/dist/gsap";
 import { useGSAP } from "@gsap/react/dist";
-
 export default function Projects() {
     const containerRef = useRef(null);
     const wrapperRef = useRef(null);
-    const [activeDot, setActiveDot] = useState(0);
+
 
     useGSAP(() => {
-        const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-
-        // Desktop only: GSAP-driven horizontal pinned scroll.
-        // Mobile uses native CSS scroll-snap — no GSAP needed.
-        if (!isTouchDevice) {
-            let sections = gsap.utils.toArray(".project-panel");
-            if (sections.length > 0) {
-                gsap.to(sections, {
-                    xPercent: -100 * (sections.length - 1),
-                    ease: "none",
-                    scrollTrigger: {
-                        trigger: containerRef.current,
-                        pin: true,
-                        scrub: 1,
-                        snap: 1 / (sections.length - 1),
-                        start: "top top",
-                        end: "+=" + (sections.length * 1000)
-                    }
-                });
-            }
+        let sections = gsap.utils.toArray(".project-panel");
+        if (sections.length > 0) {
+            gsap.to(sections, {
+                xPercent: -100 * (sections.length - 1),
+                ease: "none",
+                scrollTrigger: {
+                    trigger: containerRef.current,
+                    pin: true,
+                    scrub: 1,
+                    snap: 1 / (sections.length - 1),
+                    start: "top top",
+                    end: "+=" + (sections.length * 1000)
+                }
+            });
         }
-
     }, { scope: containerRef });
 
-    // Track swipe position for the dot indicator (mobile only)
-    useEffect(() => {
-        const wrapper = wrapperRef.current;
-        if (!wrapper) return;
 
-        const handleScroll = () => {
-            const index = Math.round(wrapper.scrollLeft / wrapper.clientWidth);
-            setActiveDot(index);
-        };
-
-        wrapper.addEventListener('scroll', handleScroll, { passive: true });
-        return () => wrapper.removeEventListener('scroll', handleScroll);
-    }, []);
 
     const projects = [
         {
@@ -72,7 +52,7 @@ export default function Projects() {
         <>
             <div
                 id="projects"
-                ref={(el) => { containerRef.current = el; wrapperRef.current = el; }}
+                ref={containerRef}
                 className="projects-wrapper"
             >
                 {projects.map((p, i) => (
@@ -143,16 +123,6 @@ export default function Projects() {
                     </section>
                 ))}
 
-                {/* Swipe indicator dots — visible on mobile only */}
-                <div className="swipe-dots">
-                    {projects.map((_, i) => (
-                        <div
-                            key={i}
-                            className={`swipe-dot ${activeDot === i ? 'active' : ''}`}
-                        />
-                    ))}
-                </div>
-
                 {/* "All Projects" link */}
                 <div className="projects-cta">
                     <a href="/projects" style={{
@@ -180,10 +150,11 @@ export default function Projects() {
             </div>
 
             <style jsx>{`
-                /* ---- DESKTOP: GSAP-driven horizontal pinned scroll ---- */
+                /* ---- DESKTOP & MOBILE: GSAP-driven horizontal pinned scroll ---- */
                 .projects-wrapper {
                     width: ${projects.length * 100}%;
                     height: 100vh;
+                    height: 100dvh;
                     display: flex;
                     flex-wrap: nowrap;
                     margin: 0;
@@ -194,6 +165,7 @@ export default function Projects() {
                 .project-panel {
                     width: 100vw;
                     height: 100vh;
+                    height: 100dvh;
                     position: relative;
                     display: flex;
                     justify-content: center;
@@ -221,37 +193,8 @@ export default function Projects() {
 
                 .swipe-dots { display: none; }
 
-                /* ---- MOBILE: Native CSS scroll-snap horizontal carousel ---- */
-                /* Same look as desktop — swipe left/right through all 3 cards.
-                   Uses the browser's own touch engine (zero GSAP), so it's smooth. */
-                @media (max-width: 768px), (pointer: coarse) {
-                    .projects-wrapper {
-                        width: 100vw !important;
-                        height: 100vh !important;
-                        display: flex !important;
-                        flex-direction: row !important;
-                        flex-wrap: nowrap !important;
-                        overflow-x: scroll !important;
-                        overflow-y: hidden !important;
-                        /* Native snap — snaps to each card on swipe */
-                        scroll-snap-type: x mandatory !important;
-                        -webkit-overflow-scrolling: touch !important;
-                        /* Hide the scrollbar visually */
-                        scrollbar-width: none !important;
-                    }
-
-                    .projects-wrapper::-webkit-scrollbar {
-                        display: none;
-                    }
-
-                    .project-panel {
-                        /* Each card fills the full viewport and snaps into place */
-                        width: 100vw !important;
-                        height: 100vh !important;
-                        flex-shrink: 0 !important;
-                        scroll-snap-align: start !important;
-                    }
-
+                /* ---- MOBILE OPTIMIZATIONS ---- */
+                @media (max-width: 768px) {
                     /* No blur on mobile — expensive on GPU */
                     .project-bg {
                         filter: brightness(0.5) !important;
@@ -267,32 +210,6 @@ export default function Projects() {
                         left: 50vw !important;
                         transform: translateX(-50%) !important;
                         z-index: 100 !important;
-                    }
-
-                    /* Swipe hint dots — show on mobile */
-                    .swipe-dots {
-                        display: flex !important;
-                        position: absolute;
-                        bottom: 60px;
-                        left: 50%;
-                        transform: translateX(-50%);
-                        gap: 8px;
-                        z-index: 200;
-                        pointer-events: none;
-                    }
-
-                    .swipe-dot {
-                        width: 6px;
-                        height: 6px;
-                        border-radius: 50%;
-                        background: rgba(255, 255, 255, 0.35);
-                        transition: background 0.3s;
-                    }
-
-                    .swipe-dot.active {
-                        background: #fff;
-                        width: 18px;
-                        border-radius: 3px;
                     }
                 }
             `}</style>
